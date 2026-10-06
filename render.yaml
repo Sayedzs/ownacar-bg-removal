@@ -1,0 +1,7 @@
+# Render.com deployment configuration
+services:
+  - type: web
+    name: ownacar-bg-removal
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
