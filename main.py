@@ -1,12 +1,26 @@
+import os
+import io
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from rembg import remove
 from PIL import Image, ImageDraw, ImageFilter
-import io
-import math
 
 app = FastAPI(title="OwnACar Background Removal API")
+
+# Lazy load rembg to avoid startup issues
+_rembg_session = None
+
+def get_rembg():
+    global _rembg_session
+    if _rembg_session is None:
+        from rembg import remove, new_session
+        _rembg_session = new_session("u2net")
+    return _rembg_session
+
+def remove_bg(image_bytes):
+    from rembg import remove
+    session = get_rembg()
+    return remove(image_bytes, session=session)
 
 # CORS for your frontend
 app.add_middleware(
@@ -120,8 +134,8 @@ def process_car_image(image_bytes: bytes) -> bytes:
     original = Image.open(io.BytesIO(image_bytes)).convert('RGBA')
     width, height = original.size
     
-    # Remove background using rembg
-    output_bytes = remove(image_bytes)
+    # Remove background using rembg (lazy loaded)
+    output_bytes = remove_bg(image_bytes)
     car_no_bg = Image.open(io.BytesIO(output_bytes)).convert('RGBA')
     
     # Get car bounding box (non-transparent area)
