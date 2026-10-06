@@ -15,14 +15,14 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download the rembg model
-RUN python -c "from rembg import new_session; new_session('u2net')"
-
 # Copy application
 COPY main.py .
 
 # Expose port
 EXPOSE 8000
+
+# Set environment variable for model download location
+ENV U2NET_HOME=/app/.u2net
 
 # Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
