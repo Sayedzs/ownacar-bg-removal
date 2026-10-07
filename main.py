@@ -16,8 +16,8 @@ def get_rembg():
     if _rembg_session is None and not _model_loading:
         _model_loading = True
         from rembg import remove, new_session
-        # Use u2netp (portable) - much smaller model that works on 512MB RAM
-        _rembg_session = new_session("u2netp")
+        # Use silueta (43MB) - fast, lightweight, works on free-tier servers
+        _rembg_session = new_session("silueta")
         _model_loading = False
     return _rembg_session
 
