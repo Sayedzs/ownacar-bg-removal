@@ -1,41 +1,24 @@
 import os
 import io
-import threading
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from PIL import Image, ImageDraw, ImageFilter
-from contextlib import asynccontextmanager
 
-# Lazy load rembg to avoid startup issues
+app = FastAPI(title="OwnACar Background Removal API")
+
+# Lazy load rembg session
 _rembg_session = None
-_model_loading = False
 
 def get_rembg():
-    global _rembg_session, _model_loading
-    if _rembg_session is None and not _model_loading:
-        _model_loading = True
+    global _rembg_session
+    if _rembg_session is None:
+        print("Loading rembg model (silueta)...")
         from rembg import remove, new_session
         # Use silueta (43MB) - fast, lightweight, works on free-tier servers
         _rembg_session = new_session("silueta")
-        _model_loading = False
+        print("Model loaded successfully!")
     return _rembg_session
-
-def preload_model():
-    """Preload model in background thread on startup"""
-    print("Preloading rembg model...")
-    get_rembg()
-    print("Model preloaded and ready!")
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: preload model in background
-    thread = threading.Thread(target=preload_model)
-    thread.start()
-    yield
-    # Shutdown: nothing to clean up
-
-app = FastAPI(title="OwnACar Background Removal API", lifespan=lifespan)
 
 def remove_bg(image_bytes):
     from rembg import remove
