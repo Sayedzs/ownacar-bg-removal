@@ -14,7 +14,8 @@ def get_rembg():
     global _rembg_session
     if _rembg_session is None:
         from rembg import remove, new_session
-        _rembg_session = new_session("u2net")
+        # Use u2netp (portable) - much smaller model that works on 512MB RAM
+        _rembg_session = new_session("u2netp")
     return _rembg_session
 
 def remove_bg(image_bytes):
