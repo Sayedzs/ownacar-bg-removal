@@ -7,23 +7,24 @@ from PIL import Image, ImageDraw, ImageFilter
 
 app = FastAPI(title="OwnACar Background Removal API")
 
-# Lazy load rembg session
+# Lazy load rembg - import once, reuse
+_rembg_remove = None
 _rembg_session = None
 
 def get_rembg():
-    global _rembg_session
+    global _rembg_remove, _rembg_session
     if _rembg_session is None:
         print("Loading rembg model (silueta)...")
         from rembg import remove, new_session
         # Use silueta (43MB) - fast, lightweight, works on free-tier servers
         _rembg_session = new_session("silueta")
+        _rembg_remove = remove
         print("Model loaded successfully!")
-    return _rembg_session
+    return _rembg_remove, _rembg_session
 
 def remove_bg(image_bytes):
-    from rembg import remove
-    session = get_rembg()
-    return remove(image_bytes, session=session)
+    remove_fn, session = get_rembg()
+    return remove_fn(image_bytes, session=session)
 
 # CORS for your frontend
 app.add_middleware(
