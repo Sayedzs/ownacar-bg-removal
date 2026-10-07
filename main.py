@@ -1,30 +1,24 @@
 import os
 import io
+
+# Set model BEFORE importing rembg
+os.environ["U2NET_HOME"] = "/app/.u2net"
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from PIL import Image, ImageDraw, ImageFilter
+from rembg import remove, new_session
 
 app = FastAPI(title="OwnACar Background Removal API")
 
-# Lazy load rembg - import once, reuse
-_rembg_remove = None
-_rembg_session = None
-
-def get_rembg():
-    global _rembg_remove, _rembg_session
-    if _rembg_session is None:
-        print("Loading rembg model (silueta)...")
-        from rembg import remove, new_session
-        # Use silueta (43MB) - fast, lightweight, works on free-tier servers
-        _rembg_session = new_session("silueta")
-        _rembg_remove = remove
-        print("Model loaded successfully!")
-    return _rembg_remove, _rembg_session
+# Create session with silueta model (43MB - fast, works on free tier)
+print("Initializing rembg with silueta model...")
+_session = new_session("silueta")
+print("Model ready!")
 
 def remove_bg(image_bytes):
-    remove_fn, session = get_rembg()
-    return remove_fn(image_bytes, session=session)
+    return remove(image_bytes, session=_session)
 
 # CORS for your frontend
 app.add_middleware(
